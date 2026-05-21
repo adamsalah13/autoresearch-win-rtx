@@ -18,9 +18,22 @@ function Run-Compose {
         [string[]]$Args
     )
 
-    & docker compose @Args
-    if ($LASTEXITCODE -ne 0) {
-        throw "docker compose failed with exit code $LASTEXITCODE"
+    $hadNativePref = $null -ne (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue)
+    if ($hadNativePref) {
+        $oldNativePref = $Global:PSNativeCommandUseErrorActionPreference
+        $Global:PSNativeCommandUseErrorActionPreference = $false
+    }
+
+    try {
+        & docker compose @Args
+        if ($LASTEXITCODE -ne 0) {
+            throw "docker compose failed with exit code $LASTEXITCODE"
+        }
+    }
+    finally {
+        if ($hadNativePref) {
+            $Global:PSNativeCommandUseErrorActionPreference = $oldNativePref
+        }
     }
 }
 
