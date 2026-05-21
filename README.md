@@ -60,6 +60,71 @@ uv run train.py --smoke-test
 
 If the above commands all work ok, your setup is working and you can go into autonomous research mode.
 
+## Containerized workflow (Docker)
+
+If you prefer not to install Python dependencies directly on your workstation, run the project inside a GPU-enabled container.
+
+Requirements:
+
+- Docker Desktop with WSL2 backend
+- NVIDIA Container Toolkit support enabled in Docker Desktop
+- NVIDIA driver installed on host
+
+Optional helper (Windows PowerShell):
+
+```powershell
+./scripts/container.ps1 build
+./scripts/container.ps1 gpu-check
+./scripts/container.ps1 prepare
+./scripts/container.ps1 smoke
+./scripts/container.ps1 train
+```
+
+The helper wraps `docker compose` and fails fast with a clear message if Docker CLI is not on your PATH.
+
+Build the image:
+
+```powershell
+docker compose build
+```
+
+Open an interactive shell inside the container:
+
+```powershell
+docker compose run --rm autoresearch
+```
+
+One-time data preparation inside the container:
+
+```powershell
+docker compose run --rm autoresearch uv run prepare.py
+```
+
+Run one training experiment (~5 min):
+
+```powershell
+docker compose run --rm autoresearch uv run train.py
+```
+
+Quick validation run:
+
+```powershell
+docker compose run --rm autoresearch uv run train.py --smoke-test
+```
+
+Notes:
+
+- The repository is bind-mounted into `/workspace`, so code edits on host are reflected immediately in the container.
+- Python dependencies are installed into `/opt/venv` in the image, so bind-mounting `/workspace` does not hide the container environment.
+- Container runs pin `UV_PYTHON=3.12` to match the image interpreter and avoid per-run environment recreation.
+- Dataset/tokenizer cache is stored in the named volume `autoresearch-cache` at `/cache/autoresearch`.
+- Compose requests NVIDIA GPU access via both `gpus: all` and a device reservation for wider Docker Desktop compatibility.
+- To verify GPU visibility from the container, run:
+
+```powershell
+docker compose run --rm autoresearch uv run python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no-gpu')"
+```
+
 ## Running the agent
 
 Simply spin up your Claude/Codex or whatever you want in this repo (and disable all permissions), then you can prompt something like:

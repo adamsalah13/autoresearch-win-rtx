@@ -1,0 +1,31 @@
+services:
+  autoresearch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: autoresearch:latest
+    working_dir: /workspace
+    init: true
+    tty: true
+    stdin_open: true
+    shm_size: "8gb"
+    ipc: host
+    gpus: all
+    environment:
+      AUTORESEARCH_CACHE_DIR: /cache/autoresearch
+      HF_HUB_DISABLE_PROGRESS_BARS: "1"
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+      UV_PYTHON: "3.12"
+    volumes:
+      - ./:/workspace
+      - autoresearch-cache:/cache/autoresearch
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  autoresearch-cache:

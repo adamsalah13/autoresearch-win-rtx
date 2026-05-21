@@ -1,0 +1,2 @@
+commit	val_bpb	memory_gb	status	description
+a4123c6	0.856792	11.7	keep	baseline container run (tinystories, batch_size=16)
